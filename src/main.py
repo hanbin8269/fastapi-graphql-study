@@ -1,6 +1,6 @@
 import json
 from fastapi import FastAPI
-from graphene import ObjectType, List, String, Schema, Field
+from graphene import ObjectType, List, String, Schema, Field, Mutation
 
 from graphql.execution.executors.asyncio import AsyncioExecutor
 from starlette.graphql import GraphQLApp
@@ -22,6 +22,32 @@ class Query(ObjectType):
 
 
 app = FastAPI()
+
+
+class CreateCourse(Mutation):
+    course = Field(CourseType)
+
+    class Arguments:
+        id = String(required=True)
+        title = String(required=True)
+        instructor = String(required=True)
+
+    async def mutate(self, info, id, title, instructor):
+        with open("./courses.json", "r+") as courses:
+            course_list = json.load(courses)
+            course_list.append()
+            courses.seek(0)
+            json.dump(course_list, courses, indent=2)
+        return CreateCourse(course=course_list[-1])
+
+
+class Mutation(ObjectType):
+    create_course = CreateCourse.Field()
+
+
 app.add_route(
-    "/graphql", GraphQLApp(schema=Schema(query=Query), executor_class=AsyncioExecutor)
+    "/graphql",
+    GraphQLApp(
+        schema=Schema(query=Query, mutation=Mutation), executor_class=AsyncioExecutor
+    ),
 )
